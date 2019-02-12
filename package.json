@@ -1,0 +1,26 @@
+{
+  "name": "dynamic-deadfunction-detector",
+  "version": "1.0.0",
+  "description": "Dynamic dead function detector for JavaScript.",
+  "main": "instrumenter.js",
+  "directories": {
+    "example": "example"
+  },
+  "scripts": {
+    "test": "node instrumenter.js ./example/proj1"
+  },
+  "keywords": [
+    "Deadcode",
+    "JavaScript",
+    "Instrumentation"
+  ],
+  "author": "Kishan Nirghin",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "esprima": "^4.0.1",
+    "express": "^4.16.4",
+    "express-validator": "^5.3.1",
+    "fs-extra": "^7.0.1"
+  }
+}
