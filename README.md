@@ -43,11 +43,12 @@ The instrumenter will instrument all JS functions it encounters. Also it will cr
 _Note: the instrumenter will copy the source code rather than overwrite it; When overwrite is desired choose the same source as output folder and use the force option_
 
 **Runtime options**
-|option|description|default|
-|---|---|---|
-| -s, --source | Source file or folder to be instrumented  | (Required) |
-| -o, --output | Output folder where the instrumented source code should be stored |  \<sourceFolder\>_instrumented |
-| -f, --force | Allow overriding existing files | False: the application stops whenever a override is about to happen |
+
+| option       | description                                                       | default                                                      |
+|--------------|-------------------------------------------------------------------|--------------------------------------------------------------|
+| -s, --source | Source file or folder to be instrumented                          | (Required)                                                   |
+| -o, --output | Output folder where the instrumented source code should be stored | "sourceFolder"_instrumented                                  |
+| -f, --force  | Allow overriding existing files                                   | The application stops whenever a override is about to happen |
 
 `node instrumenter.js -s <sourceFolder>`
 
