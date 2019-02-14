@@ -14,3 +14,10 @@ String.prototype.splice = function(index, count, add) {
   }
   return this.slice(0, index) + (add || "") + this.slice(index + count);
 }
+
+
+Object.prototype.extend = function (obj) {
+  for (key in obj) {
+    this[key] = obj[key];
+  }
+}

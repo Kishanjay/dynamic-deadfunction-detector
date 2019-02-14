@@ -14,4 +14,4 @@ var hi_v2 = () => {
     console.log("some new hi");
 }
 
-// sayHello();
+sayHello();

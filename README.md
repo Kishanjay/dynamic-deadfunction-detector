@@ -41,6 +41,7 @@ and _statistics.json file.
 
 
 The output format of the functions is the same overal
+```json
 {
     id: (not always present),
     index: (the index of the function, can be used as identifier)
@@ -48,14 +49,15 @@ The output format of the functions is the same overal
     range: (the charnumbers from the beginning to the end of the function)
     bodyRange: (the charnumbers from the beginning and end of the function body)
 }
-
+```
 
 
 # TODO
 Some things that would make this project better are:
 
+- should also grab js functions from non .js files (when picking folder)
 - Export variables such as filenames that are used in multiple files to a
 seperate file. -> Reduce code duplication.
 - Generate more visual statistics regarding the dead code
-- Create a cleanup file ? that can maybe add comments to dead functions
+- Create a cleanup file that can maybe add comments to dead functions
 or even remove them.

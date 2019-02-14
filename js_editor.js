@@ -1,5 +1,6 @@
-const fs = require('fs'),
-    esprima = require('esprima');
+const fs = require("fs"),
+    esprima = require("esprima"),
+    path = require("path");
 
 require("./prototype_extension");
 
@@ -8,7 +9,15 @@ const ESPRIMA_FUNCTION_TYPES = ['FunctionDeclaration', 'FunctionExpression', 'Ar
 module.exports = class JsEditor {
     constructor(filePath = null) {
         if (filePath) { this.loadFile(filePath); }
-    } 
+    }
+
+    loadSource(source, filePath = null) {
+        this.source = this.originalSource = source;
+        this.filePath = filePath;
+
+        this._onLoadedHook();
+        return this;
+    }
     
     loadFile(filePath) {
         this.filePath = filePath;
@@ -92,14 +101,29 @@ instrumentation_log('${data}');
 // @endinstrumentation`;
     }
 
+    /**
+     * Note: this function should only be called when its the js file that gets
+     * overwritten. (should not be the html file)
+     */
     saveFile() {
         if(this.filePath == null) {
-			return console.log("No file loaded");
-		}
+			return console.log("js_editor save error: No file loaded");
+        }
+        if (path.extname(this.filePath) != ".js") {
+            return console.log("js_editor save error: Invalid file");
+        }
 		fs.writeFileSync( this.filePath, this.source );
     }
 
     _onLoadedHook() {
-        this.loadFunctionData();
+        // doesnt do anything at the moment.
+    }
+
+    getSource() {
+        return this.source;
+    }
+
+    getOriginalSource() {
+        return this.originalSource;
     }
 }

@@ -15,44 +15,113 @@
  */
 'use strict';
 
-const cheerio = require("cheerio"),
-    esprima = require("esprima"),
-    fs = require("fs-extra"),
+const fs = require("fs-extra"),
     path = require("path"),
+    commandLineArgs = require('command-line-args'),
     fileName = path.basename(__filename);
 
 var helper = require("./helper");
-var JsEditor = require("./js_editor");
+var JsEditor = require("./js_editor"),
+    HTMLEditor = require("./html_editor");
 
 require("./prototype_extension");
 
-if(process.argv.length < 3) {
-    console.log(`usage: node ${fileName} <source>`);
+/* get the instrumenter options */
+var options = {
+    remove: false,
+    file: false,
+    source: null,
+}
+try {
+    var argv = commandLineArgs([
+        /* Force overrides of source code */
+        { name: 'force', type: Boolean, alias: 'f' },
+
+        /* Source can either be a file or a folder */
+        { name: 'source', type: String, alias: 's' },
+
+        /* instrumented source folder (output) */
+        { name: 'output', type: String, alias: 'o' },
+    ]);
+    options.extend(argv);
+} catch(exception) {
+	console.log(exception.message);
+	process.exit(1);
+}
+
+if( ! options["source"] ) {
+    console.log(`usage: node ${fileName} -s <source>`);
     process.exit(1);
 }
 
-var sourceLocation = process.argv[2];
-/* append the source location with _instrumented and copy the sourcecode (preserving the original) */
-var instrumentedSourceLocation = "./" + path.join(path.dirname(sourceLocation), path.basename(sourceLocation) + "_instrumented");
-// if (fs.existsSync(instrumentedSourceLocation)) {
-//     console.log(`Warning folder ${instrumentedSourceLocation} already exists`);
-//     process.exit(1);
-// }
-fs.copySync(sourceLocation, instrumentedSourceLocation);
+options["file"] = (path.extname(options["source"]) != ""); // True or false on whether the source is a file.
 
-/* retrieve all .js files within these folders */
-var jsFilePaths = helper.getJsFilePaths(instrumentedSourceLocation);
 
-/* instrument all functions in these .js files */
-var allFunctions = [];
-jsFilePaths.forEach((jsFilePath) => {    
-    var jse = new JsEditor().loadFile(jsFilePath);
+var sourceFolder = path.dirname(options["source"]);
+// exception to get the source folder (dirname gives the parent folder when source is a folder)
+if (!options["file"]) {
+    sourceFolder = "./" + path.join(sourceFolder, path.basename(options["source"]));
+}
 
-    var functionsOfFile = jse.instrumentFunctions();
-    allFunctions = allFunctions.concat(functionsOfFile);
-    jse.saveFile();
-});
+var instrumentedSourceFolder =  sourceFolder + "_instrumented";
+if (options["output"]) {
+    instrumentedSourceFolder = options["output"];
+}
 
-var resultLocation = path.join(instrumentedSourceLocation, "_all_functions.json");
+var instrumentedSourceFile = null;
+if (options["file"]) {
+    instrumentedSourceFile = "./" + path.join(instrumentedSourceFolder, path.basename(options["source"]));
+}
+
+
+if (fs.existsSync(instrumentedSourceFolder)) {
+    console.log(`Warning folder ${instrumentedSourceFolder} already exists`);
+
+    if (!options["force"]) { process.exit(1); }
+    console.log(`(Force override activated, continuing..)`);
+    
+}
+
+/* allow users to override the source folder */
+if (sourceFolder != instrumentedSourceFolder){
+    fs.copySync(sourceFolder, instrumentedSourceFolder);
+}
+
+var allFunctions = []; // keep track of all functions that were instrumented
+
+if (options["file"]) {
+    var htmle = new HTMLEditor().loadFile(instrumentedSourceFile);
+
+    var externalScripts = htmle.getExternalScripts();
+    externalScripts.forEach((extScript) => {
+        var jse = new JsEditor().loadFile(extScript.src);
+        var functionsOfFile = jse.instrumentFunctions();
+        allFunctions = allFunctions.concat(functionsOfFile);
+        jse.saveFile();
+    });
+
+    var internalScripts = htmle.getInternalScripts();
+    internalScripts.forEach((intScript) => {
+        var jse = new JsEditor().loadSource(intScript.source, intScript.src);
+        var functionsOfFile = jse.instrumentFunctions();
+        allFunctions = allFunctions.concat(functionsOfFile);
+        htmle.updateInternalScript(jse.getOriginalSource(), jse.getSource());
+        htmle.saveFile();
+    });
+} else {
+    /* retrieve all .js files within these folders */
+    var jsFilePaths = helper.getJsFilePaths(instrumentedSourceFolder);
+
+    /* instrument all functions in these .js files */
+    jsFilePaths.forEach((jsFilePath) => {    
+        var jse = new JsEditor().loadFile(jsFilePath);
+
+        var functionsOfFile = jse.instrumentFunctions();
+        allFunctions = allFunctions.concat(functionsOfFile);
+        jse.saveFile();
+    });
+}
+
+var resultLocation = path.join(instrumentedSourceFolder, "_all_functions.json");
 fs.writeFileSync(resultLocation, JSON.stringify(allFunctions), 'utf8');
 
