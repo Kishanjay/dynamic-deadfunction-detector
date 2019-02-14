@@ -13,17 +13,21 @@ _Note: for this to work the user has to make sure not to have skipped some funct
 
 ### Dependencies
 **NodeJS** to run the instrumenter script and instrumentation_server
-**Esprima** to detect the function locations [http://esprima.org/] 
+**Esprima** to detect the function locations [http://esprima.org/](http://esprima.org/)
 
 ## How to use
 1. **Run the instrumenter.js on your project**.
 This will instrument all JavaScript functions with the mentioned logging information. See [js_editor](./js_editor.js) for more.
-`node instrumenter.js -s ./example/proj1`
-`node instrumenter.js -s ./example/proj1/index.html`
+
 _Note: the source can either be a file or a folder, when a file is selected it will only instrument all referenced JS code from that file (when a folder is chosen, it will instrument all .js files within that folder_
 
+`node instrumenter.js -s ./example/proj1`
+
+`node instrumenter.js -s ./example/proj1/index.html`
+
 2. **Run the instrumentation_server** 
-The main purpose for this server is to catch all execution traces from the instrumented functions. As a helping hand it will also host your instrumented project at: [http://localhost:8004].
+The main purpose for this server is to catch all execution traces from the instrumented functions. As a helping hand it will also host your instrumented project at: [http://localhost:8004](http://localhost:8004).
+
 `node instrumentation_server.js ./example/proj1_instrumented`
 
 3. **Interact with the application**
@@ -42,10 +46,11 @@ _Note: the instrumenter will copy the source code rather than overwrite it; When
 |option|description|default|
 |---|---|---|
 | -s, --source | Source file or folder to be instrumented  | (Required) |
-| -o, --output | Output folder where the instrumented source code should be stored |  <sourceFolder>_instrumented |
+| -o, --output | Output folder where the instrumented source code should be stored |  \<sourceFolder\>_instrumented |
 | -f, --force | Allow overriding existing files | False: the application stops whenever a override is about to happen |
 
 `node instrumenter.js -s <sourceFolder>`
+
 `node instrumenter.js -s ./example/proj1/index.html -o ./example/test -f`
 
 
@@ -57,6 +62,7 @@ The instrumentation server will montor all incomming logs from instrumented func
 - _statistics.json
 
 `node ./instrumentation_server.js <instrumented_sourceFolder>`
+
 `node ./instrumentation_server.js ./example/proj1_instrumented`
 
 ### Function output format
