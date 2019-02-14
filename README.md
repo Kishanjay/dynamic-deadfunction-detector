@@ -12,8 +12,8 @@ Essentially all JavaScript functions are extended with logging information. Thes
 _Note: for this to work the user has to make sure not to have skipped some functionality of the website as this will cause false positives._
 
 ### Dependencies
-**NodeJS** to run the instrumenter script and instrumentation_server
-**Esprima** to detect the function locations [http://esprima.org/](http://esprima.org/)
+- **NodeJS** to run the instrumenter script and instrumentation_server
+- **Esprima** to detect the function locations [http://esprima.org/](http://esprima.org/)
 
 ## How to use
 1. **Run the instrumenter.js on your project**.
