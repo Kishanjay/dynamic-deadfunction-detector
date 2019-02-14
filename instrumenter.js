@@ -5,7 +5,7 @@
  * The instrumentation functions can be found in the js_editor.js
  * Currently it uses the instrumentation_log function which makes a
  * request to the instrumentation_server; which will store all alive functions
- * under alive_functions.json
+ * under _alive_functions.json
  * 
  * @version 0.1
  * @author Kishan Nirghin

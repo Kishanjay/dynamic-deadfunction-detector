@@ -1,3 +1,12 @@
+/**
+ * @description Class that is responsible for editing JS files.
+ * Thus contains the instrumentation code aswell.
+ * 
+ * @version 0.1
+ * @author Kishan Nirghin
+ * @Date 10-02-2019
+ */
+
 const fs = require("fs"),
     esprima = require("esprima"),
     path = require("path");

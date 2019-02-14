@@ -1,12 +1,12 @@
 /**
  * @description Server that gets called by all all alive functions.
- * The server will create an unique set of alive_functions.txt
+ * The server will create an unique set of _alive_functions.json
  * 
  * @version 0.1
  * @author Kishan Nirghin
  * @Date 07-02-2019
  * 
- * @param <instrumentedSourceFolder> 
+ * @param <instrumentedSourceFolder> the FOLDER of the instrumented source.
  */
 'use strict';
 

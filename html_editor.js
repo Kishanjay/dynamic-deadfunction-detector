@@ -1,3 +1,11 @@
+/**
+ * @description Class that is responsible for editing HTML files.
+ * Contains methods to retrieve JS files or code.
+ * 
+ * @version 0.1
+ * @author Kishan Nirghin
+ * @Date 12-02-2019
+ */
 const cheerio = require("cheerio"),
     fs = require("fs"),
     path = require("path");

@@ -1,3 +1,7 @@
+/**
+ * Helper functions.
+ */
+
 const fs = require("fs-extra"),
     path = require("path");
 
