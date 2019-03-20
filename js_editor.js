@@ -45,7 +45,6 @@ module.exports = class JsEditor {
                     type: node.type,
                     bodyRange: node.body.range,
                     range: node.range,
-                    id: node.id,
                     file: this.filePath,
                     index: index++
                 });
@@ -54,14 +53,18 @@ module.exports = class JsEditor {
         return functionData;
     }
 
-    instrumentFunctions() {
+    instrumentFunctions(options) {
         var functionData = this.loadFunctionData();
 
-        var instrumentationLogFunction = this._getInstrumentationLogFunction();
+        /* obviously needed when working with offsets */
+        functionData.sort((a, b) => { return a.range[0] - b.range[0]});
+
+        var instrumentationLogFunction = this._getInstrumentationLogFunction(options);
         this.source = this.source.insert(0, instrumentationLogFunction);
         var offset = instrumentationLogFunction.length;
         
         functionData.forEach((funcData, index) => {
+            if (options && options["label"]) { funcData.label = options["label"]; } /* Add a fixed label to every function */
             /* The code that has to be inserted at the top of the function */
             var instrumentationCode = this._instrumentationBuilder(funcData, index);
 
@@ -82,19 +85,37 @@ module.exports = class JsEditor {
      * Currently this function does a call to the instrumentation server with 
      * the function information of the alive function.
      */
-    _getInstrumentationLogFunction() {
-        return `/**
+    _getInstrumentationLogFunction(options) {
+        var ensureUniqueLogs = "";
+        if (options && options["unique"]) {
+            ensureUniqueLogs = `
+                function exists(e) { return e.file == jData.file && e.range[0] == jData.range[0] && e.range[1] == jData.range[1]; }
+                var jData = JSON.parse(data);
+                if (logHistory.some(exists)){ return; }
+                logHistory.push(jData);`
+        }
+
+        var instrumentationLog = null;
+        if (options && options["console"]) {
+            instrumentationLog = `console.log(data);`;
+        } else {
+            instrumentationLog = `fetch("http://127.0.0.1:8004/alivefunction", {
+                method: "POST",
+                headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                body: data
+            }).then((response) => { });`;
+        }
+        
+        return `/** (github.com/dynamic-deadfunction-detector)
 * Instrumentation log function used by the instrumenter
 * note that the data object is already stringified.
 */
+var logHistory = [];
 function instrumentation_log(data) {
-    fetch("http://127.0.0.1:8004/alivefunction", {
-        method: "POST",
-        headers: { "Accept": "application/json", "Content-Type": "application/json" },
-        body: data
-    }).then((response) => { console.log(response.body); });
-    console.log(JSON.parse(data));
-};\n\n`
+    ${ensureUniqueLogs}
+    ${instrumentationLog}
+}
+\n\n`
     }
 
     /**
@@ -103,11 +124,7 @@ function instrumentation_log(data) {
      */
     _instrumentationBuilder(funcData, index) {
         var data = JSON.stringify(funcData);
-
-        return `
-// @startinstrumentation (github.com/dynamic-deadfunction-detector)
-instrumentation_log('${data}');
-// @endinstrumentation`;
+        return `instrumentation_log('${data}');`;
     }
 
     /**

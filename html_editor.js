@@ -10,6 +10,7 @@ const cheerio = require("cheerio"),
     fs = require("fs"),
     path = require("path");
 
+VALID_JS_TYPES = ['text/javascript', 'application/javascript', 'application/ecmascript', 'text/ecmascript'];
 module.exports = class HTMLEditor {
     loadFile(filePath) {
         this.filePath = filePath;
@@ -24,9 +25,15 @@ module.exports = class HTMLEditor {
         var scripts = [];
         cScripts.each((index, cScriptElement) => {
             if (cScriptElement.attribs["src"]) {
+                var scriptType = cScriptElement.attribs["type"];
+                if (scriptType && !VALID_JS_TYPES.includes(scriptType)) return;
+
+                var relativeScriptSrc = cScriptElement.attribs["src"];
+                if (relativeScriptSrc.toLowerCase().startsWith("http:/") || relativeScriptSrc.toLowerCase().startsWith("https:/")) { return;}
+                
                 var scriptSrc = path.join(
                     path.dirname(this.filePath),
-                    cScriptElement.attribs['src']
+                    relativeScriptSrc
                 );
                 
                 scripts.push({
@@ -43,6 +50,9 @@ module.exports = class HTMLEditor {
         var scripts = [];
         cScripts.each((index, cScriptElement) => {
             if (!cScriptElement.attribs["src"]) {
+                var scriptType = cScriptElement.attribs["type"];
+                if (scriptType && !VALID_JS_TYPES.includes(scriptType)) return;
+                
                 var source = cheerio(cScriptElement).html();
                 var bodyStart = this.source.indexOf(source);
                 var bodyEnd = bodyStart + source.length;

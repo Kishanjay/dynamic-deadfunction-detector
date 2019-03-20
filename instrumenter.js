@@ -15,14 +15,8 @@
  */
 'use strict';
 
-const fs = require("fs-extra"),
-    path = require("path"),
-    commandLineArgs = require('command-line-args'),
-    fileName = path.basename(__filename);
-
-var helper = require("./helper");
-var JsEditor = require("./js_editor"),
-    HTMLEditor = require("./html_editor");
+const commandLineArgs = require('command-line-args');
+const instrumenter = require("./instrumenter_runner");
 
 require("./prototype_extension");
 
@@ -31,6 +25,9 @@ var options = {
     remove: false,
     file: false,
     source: null,
+    label: null,
+    console: false,
+    unique: false
 }
 try {
     var argv = commandLineArgs([
@@ -38,10 +35,19 @@ try {
         { name: 'force', type: Boolean, alias: 'f' },
 
         /* Source can either be a file or a folder */
-        { name: 'source', type: String, alias: 's' },
+        { name: 'source', type: String,  defaultOption: true },
 
-        /* instrumented source folder (output) */
-        { name: 'output', type: String, alias: 'o' },
+        /* instrumented source folder output */
+        { name: 'destination', type: String, alias: 'd' },
+
+        /* A label that should be included in every log */
+        { name: 'label', type: String, alias: 'l' },
+
+        /* Echo the log to console only (no http request/ quicker/ performance) */
+        { name: 'console', type: Boolean, alias: 'c' },
+
+        /* whether we should only log unique logs */ 
+        { name: 'unique', type: Boolean, alias: 'u' }
     ]);
     options.extend(argv);
 } catch(exception) {
@@ -49,79 +55,4 @@ try {
 	process.exit(1);
 }
 
-if( ! options["source"] ) {
-    console.log(`usage: node ${fileName} -s <source>`);
-    process.exit(1);
-}
-
-options["file"] = (path.extname(options["source"]) != ""); // True or false on whether the source is a file.
-
-
-var sourceFolder = path.dirname(options["source"]);
-// exception to get the source folder (dirname gives the parent folder when source is a folder)
-if (!options["file"]) {
-    sourceFolder = "./" + path.join(sourceFolder, path.basename(options["source"]));
-}
-
-var instrumentedSourceFolder =  sourceFolder + "_instrumented";
-if (options["output"]) {
-    instrumentedSourceFolder = options["output"];
-}
-
-var instrumentedSourceFile = null;
-if (options["file"]) {
-    instrumentedSourceFile = "./" + path.join(instrumentedSourceFolder, path.basename(options["source"]));
-}
-
-
-if (fs.existsSync(instrumentedSourceFolder)) {
-    console.log(`Warning folder ${instrumentedSourceFolder} already exists`);
-
-    if (!options["force"]) { process.exit(1); }
-    console.log(`(Force override activated, continuing..)`);
-    
-}
-
-/* allow users to override the source folder */
-if (sourceFolder != instrumentedSourceFolder){
-    fs.copySync(sourceFolder, instrumentedSourceFolder);
-}
-
-var allFunctions = []; // keep track of all functions that were instrumented
-
-if (options["file"]) {
-    var htmle = new HTMLEditor().loadFile(instrumentedSourceFile);
-
-    var externalScripts = htmle.getExternalScripts();
-    externalScripts.forEach((extScript) => {
-        var jse = new JsEditor().loadFile(extScript.src);
-        var functionsOfFile = jse.instrumentFunctions();
-        allFunctions = allFunctions.concat(functionsOfFile);
-        jse.saveFile();
-    });
-
-    var internalScripts = htmle.getInternalScripts();
-    internalScripts.forEach((intScript) => {
-        var jse = new JsEditor().loadSource(intScript.source, intScript.src);
-        var functionsOfFile = jse.instrumentFunctions();
-        allFunctions = allFunctions.concat(functionsOfFile);
-        htmle.updateInternalScript(jse.getOriginalSource(), jse.getSource());
-        htmle.saveFile();
-    });
-} else {
-    /* retrieve all .js files within these folders */
-    var jsFilePaths = helper.getJsFilePaths(instrumentedSourceFolder);
-
-    /* instrument all functions in these .js files */
-    jsFilePaths.forEach((jsFilePath) => {    
-        var jse = new JsEditor().loadFile(jsFilePath);
-
-        var functionsOfFile = jse.instrumentFunctions();
-        allFunctions = allFunctions.concat(functionsOfFile);
-        jse.saveFile();
-    });
-}
-
-var resultLocation = path.join(instrumentedSourceFolder, "_all_functions.json");
-fs.writeFileSync(resultLocation, JSON.stringify(allFunctions), 'utf8');
-
+instrumenter.run(options);
