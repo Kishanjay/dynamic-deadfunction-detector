@@ -38,7 +38,7 @@ module.exports = class HTMLEditor {
                 
                 scripts.push({
                     src: scriptSrc,
-                    index: index,
+                    index: index
                 });    
             }   
         });

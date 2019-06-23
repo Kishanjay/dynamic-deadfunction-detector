@@ -86,6 +86,7 @@ function run(options) {
             htmle.updateInternalScript(jse.getOriginalSource(), jse.getSource());
             htmle.saveFile();
         });
+
     } else {
         /* retrieve all .js files within these folders */
         var jsFilePaths = helper.getJsFilePaths(instrumentedSourceFolder);
@@ -102,11 +103,32 @@ function run(options) {
         // TODO: look for js functions inside HTML and other files
     }
     
+
+    fixFilePaths(allFunctions, instrumentedSourceFolder); // removes unused part of pwd from filepaths
+
     var resultLocation = path.join(instrumentedSourceFolder, "_all_functions.json");
     fs.writeFileSync(resultLocation, JSON.stringify(allFunctions), 'utf8');    
 }
 
 
+/**
+ * By default the filenames of the functions are relative to the pwd on execution
+ * Lets fix it so that it is relative to the project folder.
+ */
+function fixFilePaths(allFunctions, dir) {
+    dir = path.normalize(dir);
+    allFunctions.forEach((func) => {
+        var file = path.normalize(func.file);
+        
+        if (file.substr(0, dir.length) == dir) {
+            file = file.replace(dir, "");    
+            if (file[0] == '/') { file = file.substr(1); }
+        }
+        func.file = file;
+    });
+
+    return allFunctions;
+}
 
 module.exports = {
     run
